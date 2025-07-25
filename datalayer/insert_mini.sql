@@ -1,0 +1,1 @@
+INSERT INTO mini_projects (title, tags, summary) VALUES (?, ?, ?);
