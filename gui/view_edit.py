@@ -45,18 +45,37 @@ def launch_view_edit(previous_root):
 
     # Load project data
     projects = get_all_projects()
-    for proj in map(tuple, projects):
-        tree.insert("", "end", values=proj)
+    # Convert boolean flags to human-readable
+    for proj in projects:
+        proj_list = list(proj)
+        # Indices 11,12,13 correspond to Report, Portfolio, Showcase
+        for idx in (11, 12, 13):
+            try:
+                proj_list[idx] = "Completed" if int(proj_list[idx]) == 1 else "Incomplete"
+            except (ValueError, TypeError):
+                proj_list[idx] = "Incomplete"
+        tree.insert("", "end", values=tuple(proj_list))
+
+    from backend.project_logic import get_project_by_id
 
     def on_double_click(event):
-        item = tree.focus()
-        if not item:
-            return
-        values = tree.item(item, "values")
-        if len(values) >= 15:
-            launch_edit_project(root, values)
-        else:
-            messagebox.showerror("Error", "Incomplete project data")
+            item = tree.focus()
+            if not item:
+                return
+            vals = tree.item(item, "values")
+            if not vals:
+                messagebox.showerror("Error", "No project selected")
+                return
+            proj_id = vals[0]
+            try:
+                project_data = get_project_by_id(proj_id)
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not load project data: {e}")
+                return
+            if project_data and len(project_data) >= 15:
+                launch_edit_project(root, project_data)
+            else:
+                messagebox.showerror("Error", "Incomplete project data")
 
     tree.bind("<Double-1>", on_double_click)
 

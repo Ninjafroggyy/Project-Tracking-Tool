@@ -28,7 +28,7 @@ class EditProjectWindow:
             languages,
             report_done,
             added_to_portfolio,
-            has_showcase,
+            has_showcase_material,
             notes
         ) = project_data
 
@@ -71,11 +71,12 @@ class EditProjectWindow:
             entry.insert(0, ", ".join(values))
             entry.pack(anchor='w')
             entry.bind("<Button-1>", lambda e, t=tag_type, ent=entry: open_tag_selector(self.root, t, ent))
+            entry.config(state='readonly')
             self.tag_inputs[tag_type] = entry
 
-        self.report_var = tk.BooleanVar(value=(int(report_done) == 1))
-        self.portfolio_var = tk.BooleanVar(value=(int(added_to_portfolio) == 1))
-        self.showcase_var = tk.BooleanVar(value=(int(has_showcase) == 1))
+        self.report_var = tk.BooleanVar(value=(int(report_done or 0) == 1))
+        self.portfolio_var = tk.BooleanVar(value=(int(added_to_portfolio or 0) == 1))
+        self.showcase_var = tk.BooleanVar(value=(int(has_showcase_material or 0) == 1))
 
         bools = tk.Frame(root, bg="#1e1e1e")
         bools.pack(pady=10)
@@ -84,7 +85,10 @@ class EditProjectWindow:
             ("Added to Portfolio", self.portfolio_var),
             ("Has Showcase Material", self.showcase_var)
         ]:
-            tk.Checkbutton(bools, text=label, variable=var, fg="white", bg="#1e1e1e", selectcolor="#3e3e3e").pack(anchor='w')
+            cb = tk.Checkbutton(bools, text=label, variable=var, fg="white", bg="#1e1e1e", selectcolor="#3e3e3e")
+            if var.get():
+                cb.select()
+            cb.pack(anchor='w')
 
         self.notes_text = self._labeled_text(root, "Notes:", notes)
 
@@ -134,9 +138,9 @@ class EditProjectWindow:
             duration=self.duration_entry.get(),
             collaborators=self.collab_entry.get(),
             languages=selected_tags["language"],
-            report_done=self.report_var.get(),
-            added_to_portfolio=self.portfolio_var.get(),
-            has_showcase=self.showcase_var.get(),
+            report_done=int(self.report_var.get()),
+            added_to_portfolio=int(self.portfolio_var.get()),
+            has_showcase_material=int(self.showcase_var.get()),
             notes=self.notes_text.get("1.0", tk.END).strip()
         )
 

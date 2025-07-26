@@ -104,7 +104,7 @@ class AddProjectWindow:
             languages=selected_tags["language"],
             report_done=self.report_var.get(),
             added_to_portfolio=self.portfolio_var.get(),
-            has_showcase=self.showcase_var.get(),
+            has_showcase_material=self.showcase_var.get(),
             notes=notes
         )
 

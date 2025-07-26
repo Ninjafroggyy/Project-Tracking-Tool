@@ -17,8 +17,10 @@ def open_tag_selector(parent, tag_type, entry_widget):
             selected_tags.append(tag)
 
     def apply_selection():
+        entry_widget.config(state='normal')
         entry_widget.delete(0, tk.END)
         entry_widget.insert(0, ", ".join(selected_tags))
+        entry_widget.config(state='readonly')
         popup.destroy()
 
     tags = get_tags_by_type(tag_type)
@@ -31,11 +33,12 @@ def open_tag_selector(parent, tag_type, entry_widget):
         var = tk.BooleanVar(value=is_checked)
         cb = tk.Checkbutton(
             popup, text=tag_name, variable=var,
-            command=lambda t=tag_name, v=var: toggle_tag(t) if v.get() else None,
+            command=lambda t=tag_name: toggle_tag(t),
             fg="white", bg="#1e1e1e", selectcolor="#3e3e3e"
         )
         cb.pack(anchor="w", padx=20)
         if is_checked:
+            cb.select()
             selected_tags.append(tag_name)
 
     tk.Button(popup, text="Apply", command=apply_selection, bg="#3e3e3e", fg="white").pack(pady=10)
