@@ -1,32 +1,32 @@
-# gui/view_edit.py
+# gui/view_edit.py — Refactored View/Edit Project Table
 import tkinter as tk
 from tkinter import ttk, messagebox
-from backend.project_logic import get_all_projects, update_project
-from gui.tag_selector import open_tag_selector
+from backend.project_logic import get_all_projects
 from gui.edit_project import launch_edit_project
+from gui.common import create_themed_window, style_button
 
-def launch_view_edit(root):
-    root.withdraw()
-    new_window = tk.Toplevel()
-    new_window.title("View/Edit Projects")
-    new_window.configure(bg="#1e1e1e")
-    new_window.geometry("1200x700")
+def launch_view_edit(previous_root):
+    previous_root.withdraw()
+    root = create_themed_window("View/Edit Projects")
 
-    frame = tk.Frame(new_window, bg="#1e1e1e")
+    frame = tk.Frame(root, bg="#1e1e1e")
     frame.pack(fill='both', expand=True, padx=10, pady=10)
 
-    tree = ttk.Treeview(frame, columns=(
+    columns = (
         "ID", "Title", "Category", "Type", "Creative Skills", "Technical Skills", "Tools",
         "Status", "Duration", "Collaborators", "Languages",
-        "Report", "Portfolio", "Showcase", "Notes",
-    ), show='headings')
+        "Report", "Portfolio", "Showcase", "Notes"
+    )
+
+    tree = ttk.Treeview(frame, columns=columns, show='headings')
 
     # Set up column headings and widths
     headings = [
         ("ID", 30), ("Title", 150), ("Category", 100), ("Type", 100),
         ("Creative Skills", 150), ("Technical Skills", 150), ("Tools", 120),
-        ("Status", 80), ("Duration", 80), ("Collaborators", 120), ("Notes", 150),
-        ("Languages", 120), ("Report", 80), ("Portfolio", 80), ("Showcase", 80)
+        ("Status", 80), ("Duration", 80), ("Collaborators", 120),
+        ("Languages", 120), ("Report", 80), ("Portfolio", 80), ("Showcase", 80),
+        ("Notes", 200)
     ]
     for col, width in headings:
         tree.heading(col, text=col)
@@ -45,28 +45,26 @@ def launch_view_edit(root):
 
     # Load project data
     projects = get_all_projects()
-    for proj in projects:
+    for proj in map(tuple, projects):
         tree.insert("", "end", values=proj)
 
-    # Double-click binding
     def on_double_click(event):
         item = tree.focus()
         if not item:
             return
         values = tree.item(item, "values")
         if len(values) >= 15:
-            launch_edit_project(new_window, values)
+            launch_edit_project(root, values)
         else:
             messagebox.showerror("Error", "Incomplete project data")
 
     tree.bind("<Double-1>", on_double_click)
 
-    # Back button
-    tk.Button(new_window, text="Back to Menu", command=lambda: go_back_to_menu(new_window),
-              bg="#3e3e3e", fg="white", width=30).pack(pady=10)
+    back_btn = tk.Button(root, text="Back to Menu", command=lambda: go_back_to_menu(root))
+    style_button(back_btn)
+    back_btn.pack(pady=10)
 
 def go_back_to_menu(window):
     from gui.menu import main
-
     window.destroy()
     main()

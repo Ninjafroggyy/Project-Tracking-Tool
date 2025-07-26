@@ -1,5 +1,4 @@
-# gui/tag_selector.py
-
+# gui/tag_selector.py — Refactored tag popup window
 import tkinter as tk
 from backend.tag_logic import get_tags_by_type
 
@@ -23,11 +22,20 @@ def open_tag_selector(parent, tag_type, entry_widget):
         popup.destroy()
 
     tags = get_tags_by_type(tag_type)
+    current = entry_widget.get().split(",")
+    current_tags = set(t.strip() for t in current if t.strip())
 
     for tag in tags:
         tag_name = tag[1]  # assuming tag = (id, name)
-        cb = tk.Checkbutton(popup, text=tag_name, command=lambda t=tag_name: toggle_tag(t),
-                            fg="white", bg="#1e1e1e", selectcolor="#3e3e3e")
+        is_checked = tag_name in current_tags
+        var = tk.BooleanVar(value=is_checked)
+        cb = tk.Checkbutton(
+            popup, text=tag_name, variable=var,
+            command=lambda t=tag_name, v=var: toggle_tag(t) if v.get() else None,
+            fg="white", bg="#1e1e1e", selectcolor="#3e3e3e"
+        )
         cb.pack(anchor="w", padx=20)
+        if is_checked:
+            selected_tags.append(tag_name)
 
     tk.Button(popup, text="Apply", command=apply_selection, bg="#3e3e3e", fg="white").pack(pady=10)
