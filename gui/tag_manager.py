@@ -5,8 +5,6 @@ from functools import partial
 from backend.tag_logic import get_tags_by_type, add_tag, update_tag_name, delete_tag
 
 def launch_tag_manager(root):
-    from gui.menu import main  # put at the top if not already imported
-
     root.title("Tag Manager")
     for widget in root.winfo_children():
         widget.destroy()
@@ -14,26 +12,34 @@ def launch_tag_manager(root):
     label = tk.Label(root, text="Select a Tag Category", font=("Helvetica", 16))
     label.pack(pady=10)
 
-    categories = ["language", "creative", "tool", "type", "system"]
+    categories = [
+        "language", "creative_skill", "technical_skill",
+        "tool", "type", "category", "status"
+    ]
 
     for category in categories:
-        btn = tk.Button(
-            root, text=category.capitalize(), width=30,
-            bg="#3e3e3e", fg="white",
-            command=partial(open_category_view, root, category)
-        )
+        btn = tk.Button(root, text=category.replace("_", " ").capitalize(), width=20, bg="#3e3e3e", fg="white",
+                        command=partial(open_category_view, root, category))
         btn.pack(pady=5)
 
-    back_btn = tk.Button(root, text="Back to Menu", command=lambda: (root.destroy(), main()))
+    back_btn = tk.Button(root, text="Back to Menu", bg="#3e3e3e", fg="white",
+                         command=lambda: go_back_to_main_menu(root))
     back_btn.pack(pady=20)
+
+def go_back_to_main_menu(root):
+    from gui.menu import MainMenu
+    for widget in root.winfo_children():
+        widget.destroy()
+    MainMenu(root)
+
 
 def open_category_view(root, category):
     for widget in root.winfo_children():
         widget.destroy()
 
-    root.title(f"{category.capitalize()} Tags")
+    root.title(f"{category.replace('_', ' ').capitalize()} Tags")
 
-    header = tk.Label(root, text=f"Tags in {category.capitalize()} Category", font=("Helvetica", 14))
+    header = tk.Label(root, text=f"Tags in {category.replace('_', ' ').capitalize()} Category", font=("Helvetica", 14))
     header.pack(pady=10)
 
     tags = get_tags_by_type(category)

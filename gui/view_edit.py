@@ -1,89 +1,72 @@
 # gui/view_edit.py
 import tkinter as tk
 from tkinter import ttk, messagebox
-from backend.project_logic import get_all_projects, update_project, delete_project
+from backend.project_logic import get_all_projects, update_project
+from gui.tag_selector import open_tag_selector
+from gui.edit_project import launch_edit_project
 
-def launch_view_edit(parent):
-    window = tk.Toplevel()
-    window.title("View/Edit Projects")
-    window.configure(bg="#1e1e1e")
-    window.geometry("1000x600")
+def launch_view_edit(root):
+    root.withdraw()
+    new_window = tk.Toplevel()
+    new_window.title("View/Edit Projects")
+    new_window.configure(bg="#1e1e1e")
+    new_window.geometry("1200x700")
 
-    def go_back():
-        window.destroy()
-        parent.deiconify()
+    frame = tk.Frame(new_window, bg="#1e1e1e")
+    frame.pack(fill='both', expand=True, padx=10, pady=10)
 
-    tk.Label(window, text="Select a Project to Edit", fg="white", bg="#1e1e1e", font=("Arial", 14)).pack(pady=10)
+    tree = ttk.Treeview(frame, columns=(
+        "ID", "Title", "Category", "Type", "Creative Skills", "Technical Skills", "Tools",
+        "Status", "Duration", "Collaborators", "Languages",
+        "Report", "Portfolio", "Showcase", "Notes",
+    ), show='headings')
 
-    tree = ttk.Treeview(window, columns=("Title", "Category", "Status"), show="headings")
-    tree.heading("Title", text="Title")
-    tree.heading("Category", text="Category")
-    tree.heading("Status", text="Status")
-    tree.pack(expand=True, fill=tk.BOTH)
+    # Set up column headings and widths
+    headings = [
+        ("ID", 30), ("Title", 150), ("Category", 100), ("Type", 100),
+        ("Creative Skills", 150), ("Technical Skills", 150), ("Tools", 120),
+        ("Status", 80), ("Duration", 80), ("Collaborators", 120), ("Notes", 150),
+        ("Languages", 120), ("Report", 80), ("Portfolio", 80), ("Showcase", 80)
+    ]
+    for col, width in headings:
+        tree.heading(col, text=col)
+        tree.column(col, width=width, anchor='w')
 
-    scrollbar = ttk.Scrollbar(window, orient="vertical", command=tree.yview)
-    tree.configure(yscroll=scrollbar.set)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+    hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+    tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
 
-    def load_projects():
-        for row in get_all_projects():
-            tree.insert("", tk.END, values=(row[1], row[2], row[6]))
+    tree.grid(row=0, column=0, sticky='nsew')
+    vsb.grid(row=0, column=1, sticky='ns')
+    hsb.grid(row=1, column=0, sticky='ew')
 
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_columnconfigure(0, weight=1)
+
+    # Load project data
+    projects = get_all_projects()
+    for proj in projects:
+        tree.insert("", "end", values=proj)
+
+    # Double-click binding
     def on_double_click(event):
-        item = tree.selection()
+        item = tree.focus()
         if not item:
             return
         values = tree.item(item, "values")
-        edit_window = tk.Toplevel(window)
-        edit_window.title(f"Edit Project: {values[0]}")
-        edit_window.geometry("800x600")
-        edit_window.configure(bg="#1e1e1e")
-
-        labels = ["Title", "Category", "Type", "Creative Skills", "Technical Skills", "Tools", "Status", "Duration", "Collaborators", "Notes"]
-        entries = {}
-        for i, label in enumerate(labels):
-            frame = tk.Frame(edit_window, bg="#1e1e1e")
-            frame.pack(pady=2)
-            tk.Label(frame, text=label + ":", fg="white", bg="#1e1e1e").pack(side=tk.LEFT)
-            entry = tk.Entry(frame, width=50)
-            entry.insert(0, values[i])
-            entry.pack(side=tk.RIGHT)
-            entries[label] = entry
-
-        def save_changes():
-            if not entries["Title"].get().strip():
-                messagebox.showerror("Error", "Title cannot be empty!")
-                return
-            try:
-                update_project(
-                    entries["Title"].get(),
-                    entries["Category"].get(),
-                    entries["Type"].get(),
-                    entries["Creative Skills"].get(),
-                    entries["Technical Skills"].get(),
-                    entries["Tools"].get(),
-                    entries["Status"].get(),
-                    entries["Duration"].get(),
-                    entries["Collaborators"].get(),
-                    entries["Notes"].get()
-                )
-                messagebox.showinfo("Updated", "Project updated successfully")
-                edit_window.destroy()
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-
-        def confirm_delete():
-            if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this project?"):
-                delete_project(entries["Title"].get())
-                messagebox.showinfo("Deleted", "Project deleted successfully")
-                edit_window.destroy()
-                window.destroy()
-                launch_view_edit(parent)
-
-        tk.Button(edit_window, text="Save Changes", command=save_changes, bg="#3e3e3e", fg="white").pack(pady=10)
-        tk.Button(edit_window, text="Delete Project", command=confirm_delete, bg="#6e3e3e", fg="white").pack(pady=5)
+        if len(values) >= 15:
+            launch_edit_project(new_window, values)
+        else:
+            messagebox.showerror("Error", "Incomplete project data")
 
     tree.bind("<Double-1>", on_double_click)
-    load_projects()
 
-    tk.Button(window, text="Back", command=go_back, bg="#2e2e2e", fg="white").pack(pady=5)
+    # Back button
+    tk.Button(new_window, text="Back to Menu", command=lambda: go_back_to_menu(new_window),
+              bg="#3e3e3e", fg="white", width=30).pack(pady=10)
+
+def go_back_to_menu(window):
+    from gui.menu import main
+
+    window.destroy()
+    main()

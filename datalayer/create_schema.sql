@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS projects (
     status TEXT,
     duration TEXT,
     collaborators TEXT,
+    languages TEXT,
     report_done INTEGER DEFAULT 0,
     added_to_portfolio INTEGER DEFAULT 0,
     has_showcase_material INTEGER DEFAULT 0,
@@ -25,5 +26,7 @@ CREATE TABLE IF NOT EXISTS mini_projects (
 CREATE TABLE IF NOT EXISTS tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
-    category TEXT CHECK(category IN ('language', 'creative', 'tool', 'type', 'system'))
+    category TEXT CHECK(category IN (
+        'language', 'creative_skill', 'technical_skill', 'tool', 'type', 'category', 'status'
+    ))
 );

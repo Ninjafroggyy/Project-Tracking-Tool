@@ -16,9 +16,10 @@ class MainMenu:
 
         tk.Label(root, text="Project Tracker", fg="white", bg="#1e1e1e", font=("Arial", 18, "bold")).pack(pady=30)
 
-        tk.Button(root, text="Add New Project", command=self.go_to_add_project, width=30, bg="#3e3e3e", fg="white").pack(pady=10)
+        tk.Button(root, text="Add New Project", command=lambda: launch_add_project(root), width=30, bg="#3e3e3e", fg="white").pack(pady=10)
         tk.Button(root, text="View/Edit Projects", command=self.go_to_view_edit, width=30, bg="#3e3e3e", fg="white").pack(pady=10)
         tk.Button(root, text="Tag Manager", command=lambda: launch_tag_manager(root), width=30, bg="#3e3e3e", fg="white").pack(pady=10)
+
         tk.Button(root, text="Exit", command=root.quit, width=30, bg="#3e3e3e", fg="white").pack(pady=10)
 
     def go_to_add_project(self):
