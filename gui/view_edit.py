@@ -3,11 +3,15 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from backend.project_logic import get_all_projects, update_project, delete_project
 
-def launch_view_edit():
+def launch_view_edit(parent):
     window = tk.Toplevel()
     window.title("View/Edit Projects")
     window.configure(bg="#1e1e1e")
     window.geometry("1000x600")
+
+    def go_back():
+        window.destroy()
+        parent.deiconify()
 
     tk.Label(window, text="Select a Project to Edit", fg="white", bg="#1e1e1e", font=("Arial", 14)).pack(pady=10)
 
@@ -69,15 +73,17 @@ def launch_view_edit():
                 messagebox.showerror("Error", str(e))
 
         def confirm_delete():
-            if messagebox.askyesno("Delete", f"Are you sure you want to delete '{values[0]}'?"):
-                delete_project(values[0])
-                messagebox.showinfo("Deleted", "Project deleted.")
+            if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this project?"):
+                delete_project(entries["Title"].get())
+                messagebox.showinfo("Deleted", "Project deleted successfully")
                 edit_window.destroy()
                 window.destroy()
-                launch_view_edit()
+                launch_view_edit(parent)
 
         tk.Button(edit_window, text="Save Changes", command=save_changes, bg="#3e3e3e", fg="white").pack(pady=10)
         tk.Button(edit_window, text="Delete Project", command=confirm_delete, bg="#6e3e3e", fg="white").pack(pady=5)
 
     tree.bind("<Double-1>", on_double_click)
     load_projects()
+
+    tk.Button(window, text="Back", command=go_back, bg="#2e2e2e", fg="white").pack(pady=5)

@@ -3,11 +3,15 @@ import tkinter as tk
 from tkinter import messagebox
 from backend.project_logic import add_project
 
-def launch_add_project():
+def launch_add_project(parent):
     window = tk.Toplevel()
     window.title("Add New Project")
     window.configure(bg="#1e1e1e")
     window.geometry("700x700")
+
+    def go_back():
+        window.destroy()
+        parent.deiconify()
 
     tk.Label(window, text="Add New Project", fg="white", bg="#1e1e1e", font=("Arial", 16)).pack(pady=10)
 
@@ -51,7 +55,9 @@ def launch_add_project():
             )
             messagebox.showinfo("Success", "Project saved!")
             window.destroy()
+            parent.deiconify()
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
     tk.Button(window, text="Save Project", command=save, bg="#3e3e3e", fg="white").pack(pady=10)
+    tk.Button(window, text="Back", command=go_back, bg="#2e2e2e", fg="white").pack(pady=5)
