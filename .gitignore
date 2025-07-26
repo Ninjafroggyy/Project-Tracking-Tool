@@ -143,6 +143,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.idea
 
 # Spyder project settings
 .spyderproject
@@ -207,4 +208,6 @@ marimo/_lsp/
 __marimo__/
 
 # ─── Project Specific ─────────────────────────────────────
-datalayer/data/
+data
+folder_structure.txt
+identifier.sqlite
