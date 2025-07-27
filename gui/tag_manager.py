@@ -1,15 +1,16 @@
-# gui/tag_manager.py
+# gui/tag_manager.py — Refactored Tag Manager GUI
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from functools import partial
 from backend.tag_logic import get_tags_by_type, add_tag, update_tag_name, delete_tag
+from gui.common import style_button
 
 def launch_tag_manager(root):
     root.title("Tag Manager")
     for widget in root.winfo_children():
         widget.destroy()
 
-    label = tk.Label(root, text="Select a Tag Category", font=("Helvetica", 16))
+    label = tk.Label(root, text="Select a Tag Category", font=("Helvetica", 16), fg="white", bg="#1e1e1e")
     label.pack(pady=10)
 
     categories = [
@@ -18,12 +19,15 @@ def launch_tag_manager(root):
     ]
 
     for category in categories:
-        btn = tk.Button(root, text=category.replace("_", " ").capitalize(), width=20, bg="#3e3e3e", fg="white",
-                        command=partial(open_category_view, root, category))
+        btn = tk.Button(
+            root, text=category.replace("_", " ").capitalize(), width=20,
+            bg="#3e3e3e", fg="white",
+            command=partial(open_category_view, root, category)
+        )
         btn.pack(pady=5)
 
-    back_btn = tk.Button(root, text="Back to Menu", bg="#3e3e3e", fg="white",
-                         command=lambda: go_back_to_main_menu(root))
+    back_btn = tk.Button(root, text="Back to Menu", command=lambda: go_back_to_main_menu(root))
+    style_button(back_btn)
     back_btn.pack(pady=20)
 
 def go_back_to_main_menu(root):
@@ -32,14 +36,17 @@ def go_back_to_main_menu(root):
         widget.destroy()
     MainMenu(root)
 
-
 def open_category_view(root, category):
     for widget in root.winfo_children():
         widget.destroy()
 
     root.title(f"{category.replace('_', ' ').capitalize()} Tags")
 
-    header = tk.Label(root, text=f"Tags in {category.replace('_', ' ').capitalize()} Category", font=("Helvetica", 14))
+    header = tk.Label(
+        root,
+        text=f"Tags in {category.replace('_', ' ').capitalize()} Category",
+        font=("Helvetica", 14), fg="white", bg="#1e1e1e"
+    )
     header.pack(pady=10)
 
     tags = get_tags_by_type(category)
@@ -62,8 +69,7 @@ def open_category_view(root, category):
         selection = listbox.curselection()
         if selection:
             tag_to_delete = listbox.get(selection[0])
-            confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete '{tag_to_delete}'?")
-            if confirm:
+            if messagebox.askyesno("Confirm Delete", f"Delete '{tag_to_delete}'?"):
                 try:
                     delete_tag(tag_to_delete, category)
                     listbox.delete(selection[0])
@@ -83,10 +89,15 @@ def open_category_view(root, category):
                 except ValueError as ve:
                     messagebox.showerror("Error", str(ve))
 
-    btn_frame = tk.Frame(root)
+    btn_frame = tk.Frame(root, bg="#1e1e1e")
     btn_frame.pack(pady=10)
 
-    tk.Button(btn_frame, text="Create Tag", command=create_tag).grid(row=0, column=0, padx=5)
-    tk.Button(btn_frame, text="Edit Selected", command=edit_selected_tag).grid(row=0, column=1, padx=5)
-    tk.Button(btn_frame, text="Delete Selected", command=delete_selected_tag).grid(row=0, column=2, padx=5)
-    tk.Button(btn_frame, text="Back", command=lambda: launch_tag_manager(root)).grid(row=0, column=3, padx=5)
+    for i, (label, command) in enumerate([
+        ("Create Tag", create_tag),
+        ("Edit Selected", edit_selected_tag),
+        ("Delete Selected", delete_selected_tag),
+        ("Back", lambda: launch_tag_manager(root))
+    ]):
+        btn = tk.Button(btn_frame, text=label, command=command)
+        style_button(btn, width=18)
+        btn.grid(row=0, column=i, padx=5)

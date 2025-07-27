@@ -1,58 +1,78 @@
-# datalayer/db_handler.py
+# datalayer/db_handler.py — Refined DB Layer
+from __future__ import annotations
+
 import os
 import sqlite3
-from config import DB_PATH, SCHEMA_PATH
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Iterable, Optional, Sequence
 
-def create_database():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+from config import DB_PATH as CONFIG_DB_PATH, SCHEMA_PATH
 
-    with open(SCHEMA_PATH, 'r') as f:
-        schema_sql = f.read()
+DB_PATH = Path(CONFIG_DB_PATH)
+
+def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.executescript(schema_sql)
-    conn.commit()
-    conn.close()
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
 
+def create_database() -> None:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+        schema_sql = f.read()
 
-def get_connection():
-    return sqlite3.connect(DB_PATH)
-
-
-def run_query(query_path, params):
-    with sqlite3.connect(DB_PATH) as conn:
-        with open(query_path, "r") as f:
-            sql = f.read()
-        cur = conn.cursor()
-        cur.execute(sql, params)
+    with _connect() as conn:
+        conn.executescript(schema_sql)
         conn.commit()
 
+def get_connection() -> sqlite3.Connection:
+    return _connect()
 
-def fetch_all(query_path, params=()):
-    with open(query_path, "r") as f:
-        query = f.read()
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute(query, params)
-    rows = cur.fetchall()
-    conn.close()
-    return rows
+@contextmanager
+def transaction() -> Iterable[sqlite3.Connection]:
+    conn = _connect()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
+def execute(sql: str, params: Sequence[Any] = ()) -> int:
+    with _connect() as conn:
+        cur = conn.execute(sql, params)
+        conn.commit()
+        return cur.rowcount
 
-def fetch_one(query_path, params=None):
-    with open(query_path, "r") as f:
-        query = f.read()
+def execute_returning_lastrowid(sql: str, params: Sequence[Any] = ()) -> int:
+    with _connect() as conn:
+        cur = conn.execute(sql, params)
+        conn.commit()
+        return cur.lastrowid
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    if params:
-        cursor.execute(query, params)
-    else:
-        cursor.execute(query)
-    result = cursor.fetchone()
-    conn.close()
-    return result
+def executemany(sql: str, seq_of_params: Iterable[Sequence[Any]]) -> int:
+    with _connect() as conn:
+        cur = conn.executemany(sql, seq_of_params)
+        conn.commit()
+        return cur.rowcount
 
+def fetch_all(sql: str, params: Sequence[Any] = ()) -> list[sqlite3.Row]:
+    with _connect() as conn:
+        return conn.execute(sql, params).fetchall()
+
+def fetch_one(sql: str, params: Sequence[Any] = ()) -> Optional[sqlite3.Row]:
+    with _connect() as conn:
+        return conn.execute(sql, params).fetchone()
+
+def fetch_val(sql: str, params: Sequence[Any] = ()) -> Any:
+    row = fetch_one(sql, params)
+    return row[0] if row else None
+
+def to_dicts(rows: list[sqlite3.Row]) -> list[dict[str, Any]]:
+    return [dict(r) for r in rows]
 
 if __name__ == "__main__":
     create_database()
