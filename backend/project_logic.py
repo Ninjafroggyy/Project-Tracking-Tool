@@ -50,7 +50,10 @@ def update_project(
         tools, status, duration, collaborators, languages,
         report_done, added_to_portfolio, has_showcase_material, notes
     ) + (project_id,)
-    execute(UPDATE_PRO, params)
+    # Debugging: log parameters and affected rows
+    print("DEBUG update_project params:", params)
+    rowcount = execute(UPDATE_PRO, params)
+    print(f"DEBUG update_project affected rows: {rowcount}")
 
 def delete_project(project_id):
     execute(DELETE_PRO, (project_id,))

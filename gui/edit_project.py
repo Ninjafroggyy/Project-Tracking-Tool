@@ -74,9 +74,9 @@ class EditProjectWindow:
             entry.config(state='readonly')
             self.tag_inputs[tag_type] = entry
 
-        self.report_var = tk.BooleanVar(value=(int(report_done or 0) == 1))
-        self.portfolio_var = tk.BooleanVar(value=(int(added_to_portfolio or 0) == 1))
-        self.showcase_var = tk.BooleanVar(value=(int(has_showcase_material or 0) == 1))
+        self.report_var = tk.IntVar(value=int(report_done or 0))
+        self.portfolio_var = tk.IntVar(value=int(added_to_portfolio or 0))
+        self.showcase_var = tk.IntVar(value=int(has_showcase_material or 0))
 
         bools = tk.Frame(root, bg="#1e1e1e")
         bools.pack(pady=10)
@@ -85,7 +85,17 @@ class EditProjectWindow:
             ("Added to Portfolio", self.portfolio_var),
             ("Has Showcase Material", self.showcase_var)
         ]:
-            cb = tk.Checkbutton(bools, text=label, variable=var, fg="white", bg="#1e1e1e", selectcolor="#3e3e3e")
+            # Create checkbox with explicit toggle command to ensure var updates
+            cb = tk.Checkbutton(
+                bools,
+                text=label,
+                variable=var,
+                command=lambda v=var: v.set(1 - v.get()),
+                fg="white",
+                bg="#1e1e1e",
+                selectcolor="#3e3e3e"
+            )
+            # Pre-select if the flag is true
             if var.get():
                 cb.select()
             cb.pack(anchor='w')
