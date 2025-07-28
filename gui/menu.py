@@ -3,6 +3,7 @@ import customtkinter as ctk
 from gui.styles import BACKGROUND_COLOR, HIGHLIGHT_COLOR, GREY_COLOR, FONT_FAMILY, CONTENT_BG
 from gui.screens.add_project import AddProjectScreen
 from gui.screens.view_edit import ViewEditScreen
+from gui.screens.edit_project import EditProjectScreen
 from gui.screens.tag_manager import TagManagerScreen
 from gui.screens.common_actions import CommonActionsScreen
 from gui.screens.export_excel import ExportExcelScreen
@@ -14,6 +15,7 @@ class AppShell(ctk.CTk):
         self.title("Project Tracker")
         self.geometry("1200x700")
         self.configure(bg=BACKGROUND_COLOR)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
         self._screens = {}
         self._create_grid()
         self._create_navigation()
@@ -36,6 +38,7 @@ class AppShell(ctk.CTk):
             ("Tag Manager", lambda: self.show_frame("TagManagerScreen")),
             ("Actions", lambda: self.show_frame("CommonActionsScreen")),
             ("Export", lambda: self.show_frame("ExportExcelScreen")),
+            ("Exit", self._on_close),
         ]
         for idx, (text, cmd) in enumerate(buttons):
             btn = ctk.CTkButton(
@@ -64,35 +67,56 @@ class AppShell(ctk.CTk):
         self.hamburger.place(x=10, y=10)
         self.hamburger.lower()
 
+    def _on_close(self):
+        """Cleanly exit the application when user clicks Exit or window close."""
+        try:
+            self.destroy()
+        except:
+            pass
+
     def _load_screens(self):
         content = ctk.CTkFrame(self, fg_color=CONTENT_BG)
         content.grid(row=0, column=1, sticky="nsew")
-        for ScreenClass in [
-            MenuScreen, AddProjectScreen, ViewEditScreen,
-            TagManagerScreen, CommonActionsScreen, ExportExcelScreen
-        ]:
-            screen = ScreenClass(content, self)
+        content.grid_rowconfigure(0, weight=1)
+        content.grid_columnconfigure(0, weight=1)
+
+        # Wrap each screen in its own subframe to isolate their grids
+        for ScreenClass in [MenuScreen, EditProjectScreen, AddProjectScreen, ViewEditScreen, TagManagerScreen, CommonActionsScreen,
+                            ExportExcelScreen]:
+            container = ctk.CTkFrame(content, fg_color=CONTENT_BG)
+            container.grid(row=0, column=0, sticky="nsew")
+            container.grid_rowconfigure(0, weight=1)
+            container.grid_columnconfigure(0, weight=1)
+            screen = ScreenClass(container, self)
             name = ScreenClass.__name__
-            self._screens[name] = screen
+            self._screens[name] = container
             screen.grid(row=0, column=0, sticky="nsew")
+
         self.show_frame("MenuScreen")
 
     def show_frame(self, name: str):
-        frame = self._screens.get(name)
-        if frame:
-            frame.tkraise()
+        # Hide all screen containers
+        for container in self._screens.values():
+            container.grid_remove()
+
+        # Show target container
+        container = self._screens.get(name)
+        if not container:
+            return
+        container.grid()
+
+        # If it’s the EditProjectScreen, populate it from the stored ID
+        if name == "EditProjectScreen" and hasattr(self, "selected_project_id"):
+            # The first child of this container is the actual EditProjectScreen instance
+            edit_frame = container.winfo_children()[0]
+            if hasattr(edit_frame, "load_project"):
+                edit_frame.load_project(self.selected_project_id)
 
     def _on_resize(self, event):
-        width = self.winfo_width()
-        if width < 768:
-            self.nav_frame.grid_remove()
-            self.hamburger.lift()
-        elif width < 1024:
-            # Future: collapse nav to icons
-            pass
-        else:
+        self.nav_frame.grid()
+        # Guard against nav_frame being destroyed on app close
+        if hasattr(self, 'nav_frame') and self.nav_frame.winfo_exists():
             self.nav_frame.grid()
-            self.hamburger.lower()
 
     def _toggle_nav(self):
         if self.nav_frame.winfo_ismapped():
