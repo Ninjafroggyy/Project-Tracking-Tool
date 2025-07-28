@@ -113,10 +113,26 @@ class AppShell(ctk.CTk):
                 edit_frame.load_project(self.selected_project_id)
 
     def _on_resize(self, event):
-        self.nav_frame.grid()
-        # Guard against nav_frame being destroyed on app close
-        if hasattr(self, 'nav_frame') and self.nav_frame.winfo_exists():
-            self.nav_frame.grid()
+        # Make sure nav_frame is still valid
+        if not getattr(self, 'nav_frame', None) or not self.nav_frame.winfo_exists():
+            return
+
+        # Responsive breakpoints (from gui/styles.py)
+        from gui.styles import BREAKPOINTS
+        width = self.winfo_width()
+
+        if width < BREAKPOINTS['mobile']:
+            # Mobile view: hide sidebar, show hamburger
+            self.nav_frame.grid_remove()
+            self.hamburger.grid(row=0, column=0, sticky="nw", padx=10, pady=10)
+        elif width < BREAKPOINTS['tablet']:
+            # Tablet: collapse or narrow sidebar
+            self.nav_frame.grid(row=0, column=0, sticky="nsw")
+            # potentially adjust width or icons only
+        else:
+            # Desktop: full sidebar
+            self.hamburger.grid_remove()
+            self.nav_frame.grid(row=0, column=0, sticky="nsw")
 
     def _toggle_nav(self):
         if self.nav_frame.winfo_ismapped():
