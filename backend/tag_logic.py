@@ -19,10 +19,10 @@ def get_tags_by_type(tag_type):
 def tag_exists(tag_name):
     return fetch_one(TAG_EXISTS, (tag_name,)) is not None
 
-def update_tag_name(old_name, new_name, category):
+def update_tag_name(old_name, new_name, tag_type):
     if tag_exists(new_name):
         raise ValueError("Tag with new name already exists.")
-    execute(UPDATE_TAG, (new_name, old_name, category))
+    execute(UPDATE_TAG, (new_name, old_name, tag_type))
 
-def delete_tag(tag_name, category):
-    execute(DELETE_TAG, (tag_name, category))
+def delete_tag(tag_name, tag_type):
+    execute(DELETE_TAG, (tag_name, tag_type))
